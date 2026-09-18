@@ -29,8 +29,8 @@ listening feedback for curation.
 
 1. **Durable local queue** (Room): generation prompts and curation edits
    (`like` / `skip` / rating notes) with status `PENDING` | `SYNCED` | `FAILED`.
-2. **Local library playback**: scans app `files/library/` (and optional folder
-   URI later); list tracks; play/pause via `MediaPlayer`.
+2. **Local library playback**: scans app `files/library/` and SAF music folders;
+   list tracks; play/pause via Media3 ExoPlayer + MediaSession (notification / lock screen / BT).
 3. **UI shells**: Library, Queue, Settings (peer host + port).
 4. **PC presence + sync drain**: on resume and periodically, `GET /health`
    (or `/v1/status`). When online, `POST /v1/jobs` for each pending item and
