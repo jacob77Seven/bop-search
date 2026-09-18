@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bop-search.local/schema/track.schema.json",
+  "title": "Track",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "rating", "date_added"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable content fingerprint (primary identity)."
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phone_uris": { "type": "array", "items": { "type": "string" } },
+        "pc_paths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "title": { "type": "string" },
+    "artist": { "type": "string" },
+    "duration_ms": { "type": "integer", "minimum": 0 },
+    "genre_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Genre tree node ids."
+    },
+    "tone": { "type": "number", "minimum": 0, "maximum": 1 },
+    "energy": { "type": "number", "minimum": 0, "maximum": 1 },
+    "rating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "0–100 scale; default mid 50."
+    },
+    "blacklist": { "type": "boolean", "default": false },
+    "play_count": { "type": "integer", "minimum": 0, "default": 0 },
+    "last_played": { "type": ["string", "null"], "format": "date-time" },
+    "date_added": { "type": "string", "format": "date-time" },
+    "notes": { "type": "string" }
+  }
+}
