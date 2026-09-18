@@ -64,6 +64,26 @@ See [pc/README.md](pc/README.md).
 Drop sample audio into the app’s `files/library/` via Device File Explorer, or
 use the in-app “Rescan library” after adding files under app storage.
 
+
+## Verify queue drain (end-to-end)
+
+1. On **powerspec**, start the stub:
+   ```bash
+   cd pc
+   source .venv/bin/activate   # or: python -m venv .venv && pip install -r requirements.txt
+   uvicorn main:app --host 0.0.0.0 --port 8765 --reload
+   ```
+2. On the phone app: **Settings** → host `powerspec` (or `100.112.170.62`), port `8765` → Save → confirm Presence **ONLINE**.
+3. **Queue** → + → enter a prompt (e.g. `lofi rain at night`) → **Enqueue**.
+4. Tap **Sync now** (or wait for the automatic drain).
+5. **Expect**
+   - uvicorn log: `POST /v1/jobs accepted id=… local_id=… prompt='lofi rain…'`
+   - Queue row chip flips to **SYNCED** and shows `PC job <uuid>`
+   - Banner shows `drained ok=1 fail=0 of 1 ids=…`
+6. Optional: `curl http://powerspec:8765/v1/jobs` should list the accepted job.
+
+Logcat filters: `BopSync`, `BopPc`.
+
 ## Assumptions
 
 - Peer transport is plain HTTP (no TLS yet) on a private Tailscale/LAN network.

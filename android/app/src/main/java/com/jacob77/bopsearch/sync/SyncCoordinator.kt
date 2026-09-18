@@ -110,17 +110,21 @@ class SyncCoordinator(
         }
         var ok = 0
         var fail = 0
+        val acceptedIds = mutableListOf<String>()
         for (item in pending) {
             val result = api.postJob(settings, item)
             if (result.ok && result.jobId != null) {
                 queueRepository.markSynced(item.id, result.jobId)
+                acceptedIds += result.jobId
                 ok++
             } else {
+                // Keep transient network errors retryable via FAILED + Retry chip.
                 queueRepository.markFailed(item.id, result.error ?: "unknown")
                 fail++
             }
         }
-        val summary = "drained ok=$ok fail=$fail of ${pending.size}"
+        val ids = if (acceptedIds.isEmpty()) "" else " ids=" + acceptedIds.joinToString(",")
+        val summary = "drained ok=$ok fail=$fail of ${pending.size}$ids"
         Log.i(TAG, summary)
         return summary
     }

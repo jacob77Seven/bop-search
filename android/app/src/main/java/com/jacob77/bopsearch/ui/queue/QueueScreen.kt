@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.jacob77.bopsearch.data.QueueItemEntity
 import com.jacob77.bopsearch.data.QueueStatus
@@ -76,9 +77,9 @@ fun QueueScreen(
         ) {
             Text(
                 text = "PC: ${syncState.presence}" +
-                    (syncState.lastDrainSummary?.let { " · $it" } ?: "") +
+                    (syncState.lastDrainSummary?.let { " · $it" } ?: " · no drain yet") +
                     (syncState.lastError?.let { " · $it" } ?: ""),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
@@ -119,14 +120,32 @@ fun QueueScreen(
                                 Text(item.kind, style = MaterialTheme.typography.labelLarge)
                                 AssistChip(
                                     onClick = {},
-                                    label = { Text(item.status.name) },
+                                    label = {
+                                        Text(
+                                            when (item.status) {
+                                                QueueStatus.SYNCED -> "SYNCED"
+                                                QueueStatus.PENDING -> "PENDING"
+                                                QueueStatus.FAILED -> "FAILED"
+                                            }
+                                        )
+                                    },
+                                    colors = androidx.compose.material3.AssistChipDefaults.assistChipColors(
+                                        containerColor = when (item.status) {
+                                            QueueStatus.SYNCED -> Color(0xFF1B5E20)
+                                            QueueStatus.PENDING -> Color(0xFF4E342E)
+                                            QueueStatus.FAILED -> Color(0xFFB71C1C)
+                                        },
+                                        labelColor = Color.White,
+                                    ),
                                 )
                             }
                             Text(item.prompt, style = MaterialTheme.typography.bodyLarge)
                             Text(
-                                formatTime(item.createdAtEpochMs) +
-                                    (item.remoteJobId?.let { " · remote $it" } ?: "") +
-                                    (item.lastError?.let { " · $it" } ?: ""),
+                                buildString {
+                                    append(formatTime(item.createdAtEpochMs))
+                                    item.remoteJobId?.let { append(" · PC job "); append(it) }
+                                    item.lastError?.let { append(" · "); append(it) }
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

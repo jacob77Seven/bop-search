@@ -7,7 +7,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 logging.basicConfig(
@@ -17,9 +18,22 @@ logging.basicConfig(
 log = logging.getLogger("bop-search-pc")
 
 app = FastAPI(title="bop-search-pc", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # In-memory store for this slice; swap for sqlite later.
 _jobs: dict[str, dict[str, Any]] = {}
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    response = await call_next(request)
+    log.info("%s %s -> %s", request.method, request.url.path, response.status_code)
+    return response
 
 
 def _utc_now() -> str:
@@ -67,8 +81,8 @@ def status() -> dict[str, Any]:
     }
 
 
-@app.post("/v1/jobs", response_model=JobOut, status_code=201)
-def create_job(body: JobCreate) -> JobOut:
+@app.post("/v1/jobs", response_model=JobOut)
+def create_job(body: JobCreate, response: Response) -> JobOut:
     # Idempotent drain: reuse existing job for same client local_id.
     if body.local_id:
         for existing in _jobs.values():
@@ -76,7 +90,13 @@ def create_job(body: JobCreate) -> JobOut:
                 existing.get("client_id") == body.client_id
                 and existing.get("local_id") == body.local_id
             ):
-                log.info("idempotent hit local_id=%s -> %s", body.local_id, existing["id"])
+                log.info(
+                    "idempotent hit local_id=%s -> %s prompt=%r",
+                    body.local_id,
+                    existing["id"],
+                    body.prompt[:80],
+                )
+                response.status_code = 200
                 return JobOut(**existing)
 
     now = _utc_now()
@@ -94,13 +114,14 @@ def create_job(body: JobCreate) -> JobOut:
     }
     _jobs[job_id] = record
     log.info(
-        "accepted job id=%s kind=%s client=%s local_id=%s prompt=%r",
+        "POST /v1/jobs accepted id=%s kind=%s client=%s local_id=%s prompt=%r",
         job_id,
         body.kind,
         body.client_id,
         body.local_id,
         body.prompt[:80],
     )
+    response.status_code = 201
     return JobOut(**record)
 
 
