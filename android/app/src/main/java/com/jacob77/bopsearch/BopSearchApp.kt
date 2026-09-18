@@ -2,6 +2,7 @@ package com.jacob77.bopsearch
 
 import android.app.Application
 import com.jacob77.bopsearch.data.BopDatabase
+import com.jacob77.bopsearch.data.MusicFoldersRepository
 import com.jacob77.bopsearch.data.QueueRepository
 import com.jacob77.bopsearch.data.SettingsRepository
 import com.jacob77.bopsearch.player.LocalLibrary
@@ -20,6 +21,8 @@ class BopSearchApp : Application() {
         private set
     lateinit var settingsRepository: SettingsRepository
         private set
+    lateinit var musicFoldersRepository: MusicFoldersRepository
+        private set
     lateinit var localLibrary: LocalLibrary
         private set
     lateinit var localPlayer: LocalPlayer
@@ -32,8 +35,9 @@ class BopSearchApp : Application() {
         database = BopDatabase.get(this)
         queueRepository = QueueRepository(database.queueDao())
         settingsRepository = SettingsRepository(this)
+        musicFoldersRepository = MusicFoldersRepository(this)
         localLibrary = LocalLibrary(this)
-        localPlayer = LocalPlayer()
+        localPlayer = LocalPlayer(this)
         syncCoordinator = SyncCoordinator(
             settingsRepository = settingsRepository,
             queueRepository = queueRepository,

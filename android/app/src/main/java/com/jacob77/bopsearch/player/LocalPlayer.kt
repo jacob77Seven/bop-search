@@ -1,6 +1,8 @@
 package com.jacob77.bopsearch.player
 
+import android.content.Context
 import android.media.MediaPlayer
+import android.net.Uri
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +16,7 @@ data class PlaybackState(
     val error: String? = null,
 )
 
-class LocalPlayer {
+class LocalPlayer(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private val _state = MutableStateFlow(PlaybackState())
     val state: StateFlow<PlaybackState> = _state.asStateFlow()
@@ -23,7 +25,11 @@ class LocalPlayer {
         stopInternal()
         try {
             val mp = MediaPlayer().apply {
-                setDataSource(track.path)
+                if (track.path.startsWith("content:", ignoreCase = true)) {
+                    setDataSource(context, Uri.parse(track.path))
+                } else {
+                    setDataSource(track.path)
+                }
                 setOnCompletionListener {
                     _state.value = _state.value.copy(isPlaying = false)
                     Log.i(TAG, "completed ${track.title}")

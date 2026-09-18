@@ -19,8 +19,17 @@ Android emulator → PC on the same machine: host `10.0.2.2`.
 
 ## Local library
 
-Audio is scanned from app-private `files/library/`. Use Device File Explorer to
-copy `.mp3` / `.wav` / etc., then tap **Rescan**.
+Audio is scanned from:
+
+1. App-private `files/library/` (push files via Device File Explorer, then **Rescan**).
+2. **Music folders** you add with **Add music folder** (Storage Access Framework /
+   Open Document Tree). Pick a directory on the phone; Bop-Search keeps a
+   persistable read URI and rescans it recursively for `.mp3` / `.m4a` / `.aac` /
+   `.wav` / `.ogg` / `.flac` / `.opus`. Remove a folder anytime from the Library
+   list (releases the persisted permission).
+
+If the system later revokes SAF access, remove and re-add the folder. Very large
+trees may take a few seconds to scan.
 
 ## Logging
 

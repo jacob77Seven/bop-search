@@ -75,6 +75,7 @@ private fun BopSearchNav(viewModel: AppViewModel) {
 
     val tracks by viewModel.tracks.collectAsStateWithLifecycle()
     val playback by viewModel.playback.collectAsStateWithLifecycle()
+    val musicFolders by viewModel.musicFolders.collectAsStateWithLifecycle()
     val queue by viewModel.queueItems.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val sync by viewModel.syncState.collectAsStateWithLifecycle()
@@ -109,7 +110,10 @@ private fun BopSearchNav(viewModel: AppViewModel) {
                     tracks = tracks,
                     playback = playback,
                     libraryPath = viewModel.libraryPath,
+                    musicFolders = musicFolders,
                     onRescan = viewModel::rescanLibrary,
+                    onAddFolder = viewModel::addMusicFolder,
+                    onRemoveFolder = viewModel::removeMusicFolder,
                     onPlay = viewModel::play,
                     onToggle = viewModel::togglePlayPause,
                 )

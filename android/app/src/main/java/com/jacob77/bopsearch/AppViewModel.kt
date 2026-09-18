@@ -1,8 +1,11 @@
 package com.jacob77.bopsearch
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.jacob77.bopsearch.data.MusicFolder
+import com.jacob77.bopsearch.data.MusicFoldersRepository
 import com.jacob77.bopsearch.data.PeerSettings
 import com.jacob77.bopsearch.data.QueueItemEntity
 import com.jacob77.bopsearch.data.QueueRepository
@@ -13,16 +16,19 @@ import com.jacob77.bopsearch.player.PlaybackState
 import com.jacob77.bopsearch.player.Track
 import com.jacob77.bopsearch.sync.SyncCoordinator
 import com.jacob77.bopsearch.sync.SyncUiState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AppViewModel(
     private val queueRepository: QueueRepository,
     private val settingsRepository: SettingsRepository,
+    private val musicFoldersRepository: MusicFoldersRepository,
     private val localLibrary: LocalLibrary,
     private val localPlayer: LocalPlayer,
     private val syncCoordinator: SyncCoordinator,
@@ -33,6 +39,9 @@ class AppViewModel(
 
     val settings: StateFlow<PeerSettings> = settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PeerSettings())
+
+    val musicFolders: StateFlow<List<MusicFolder>> = musicFoldersRepository.folders
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val syncState: StateFlow<SyncUiState> = syncCoordinator.state
 
@@ -48,8 +57,27 @@ class AppViewModel(
     }
 
     fun rescanLibrary() {
+        viewModelScope.launch { doRescan() }
+    }
+
+    fun addMusicFolder(uri: Uri) {
         viewModelScope.launch {
-            _tracks.value = localLibrary.scan()
+            musicFoldersRepository.add(uri)
+            doRescan()
+        }
+    }
+
+    fun removeMusicFolder(uriString: String) {
+        viewModelScope.launch {
+            musicFoldersRepository.remove(uriString)
+            doRescan()
+        }
+    }
+
+    private suspend fun doRescan() {
+        val folders = musicFoldersRepository.currentFolders()
+        _tracks.value = withContext(Dispatchers.IO) {
+            localLibrary.scan(folders.map { it.uriString })
         }
     }
 
@@ -116,6 +144,7 @@ class AppViewModel(
                     return AppViewModel(
                         queueRepository = app.queueRepository,
                         settingsRepository = app.settingsRepository,
+                        musicFoldersRepository = app.musicFoldersRepository,
                         localLibrary = app.localLibrary,
                         localPlayer = app.localPlayer,
                         syncCoordinator = app.syncCoordinator,
