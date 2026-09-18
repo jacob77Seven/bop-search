@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s %(levelname)s [bop-pc] %(message)s",
+    format="%(asctime)s %(levelname)s [bop-search-pc] %(message)s",
 )
 log = logging.getLogger("bop-search-pc")
 

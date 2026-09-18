@@ -14,7 +14,7 @@ or use *File → New → Import Project*.
 
 ## Configure peer
 
-**Settings** tab: host `bop-pc` (MagicDNS) or LAN/Tailscale IP, port `8765`.  
+**Settings** tab: host `powerspec` (MagicDNS) or LAN/Tailscale IP, port `8765`.  
 Android emulator → PC on the same machine: host `10.0.2.2`.
 
 ## Local library

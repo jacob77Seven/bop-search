@@ -20,7 +20,7 @@ Health check:
 curl http://127.0.0.1:8765/health
 ```
 
-On a Tailscale-connected machine, use MagicDNS (`bop-pc`) or the Tailscale IP
+On a Tailscale-connected machine, use MagicDNS (`powerspec`) or the Tailscale IP
 from the Android Settings screen. The phone does not need Tailscale installed
 to build/run — only a reachable HTTP peer host.
 

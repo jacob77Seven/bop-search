@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 data class PeerSettings(
-    val host: String = "bop-pc",
+    val host: String = "powerspec",
     val port: Int = 8765,
     val clientId: String = "android",
 )
@@ -25,7 +25,7 @@ class SettingsRepository(private val context: Context) {
 
     val settings: Flow<PeerSettings> = context.dataStore.data.map { prefs ->
         PeerSettings(
-            host = prefs[hostKey] ?: "bop-pc",
+            host = prefs[hostKey] ?: "powerspec",
             port = prefs[portKey] ?: 8765,
             clientId = prefs[clientIdKey] ?: "android",
         )
@@ -33,7 +33,7 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun update(host: String, port: Int, clientId: String = "android") {
         context.dataStore.edit { prefs ->
-            prefs[hostKey] = host.trim().ifEmpty { "bop-pc" }
+            prefs[hostKey] = host.trim().ifEmpty { "powerspec" }
             prefs[portKey] = port.coerceIn(1, 65535)
             prefs[clientIdKey] = clientId.trim().ifEmpty { "android" }
         }

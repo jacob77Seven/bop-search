@@ -16,12 +16,12 @@ Docs: https://tailscale.com/docs/features/magicdns · https://tailscale.com/pric
 
 1. Install Tailscale for your OS (Windows / Linux / macOS).
 2. Sign in with the same account; approve the machine if prompted.
-3. Rename the machine to something stable (e.g. `bop-pc`) — this becomes the MagicDNS short name.
+3. Rename the machine to something stable (e.g. `powerspec`) — this becomes the MagicDNS short name.
 4. Survive reboot / no interactive login:
    - **Linux:** `tailscaled` as a system service (`systemctl enable --now tailscaled`), then `tailscale up`.
    - **Windows:** Preferences → **Run unattended** (or `tailscale up --unattended=true`) so it comes up before login.
    - **macOS:** no true unattended-as-system yet; keep user session / login item aware.
-5. Verify: `tailscale status` shows Self online; note Tailscale IP (`100.x`) and DNS name `bop-pc.<suffix>`.
+5. Verify: `tailscale status` shows Self online; note Tailscale IP (`100.x`) and DNS name `powerspec.<suffix>`.
 6. Bind the Bop-Search API / file server to the Tailscale IP or `0.0.0.0`, with firewall so only the tailnet can reach it (allow from `100.64.0.0/10` when you tighten later).
 7. Start Bop-Search services **after** Tailscale is up (`tailscale wait` on Linux helps with ordering).
 
@@ -36,13 +36,13 @@ Docs: https://tailscale.com/docs/how-to/run-unattended · https://tailscale.com/
    - Avatar → **App-based split tunneling** → **Exclude** mode. Leave **Bop-Search** unchecked so it uses Tailscale. Check-mark apps that must bypass the VPN.
    - True "only Bop-Search through Tailscale" may need MDM `IncludedPackageNames` (see Tailscale Android split-tunneling docs). Test carefully if you use Include mode.
 5. Battery: Apps → Tailscale → unrestricted; don't use as exit node.
-6. Smoke test while PC is on: hit `http://bop-pc:PORT/` or `http://100.x.y.z:PORT/` from a tunneled context.
+6. Smoke test while PC is on: hit `http://powerspec:PORT/` or `http://100.x.y.z:PORT/` from a tunneled context.
 
 Docs: https://tailscale.com/docs/features/client/android-app-split-tunneling
 
 ## D. MagicDNS + peer presence
 
-1. Prefer `bop-pc` / FQDN via MagicDNS; keep the `100.x` IP as app fallback.
+1. Prefer `powerspec` / FQDN via MagicDNS; keep the `100.x` IP as app fallback.
 2. Presence ≠ DNS: MagicDNS can still resolve when the peer is **offline**. For "PC online?" use Tailscale status / a health ping to the API with timeout + retry.
 3. Treat offline as normal: queue on phone, drain when health check succeeds after PC returns.
 4. After Wi-Fi↔cellular flips, if the peer looks stuck, toggle Tailscale off/on once.

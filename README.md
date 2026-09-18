@@ -37,7 +37,7 @@ listening feedback for curation.
    mark synced. Exponential backoff while offline. Clear Logcat tags
    `BopSync` / `BopPc`.
 
-WAN assumption: Tailscale Personal with MagicDNS names (e.g. `bop-pc`) or
+WAN assumption: Tailscale Personal with MagicDNS names (e.g. `powerspec`) or
 Tailscale IPs. **Tailscale is not required to scaffold or build** — configure
 any reachable host in Settings.
 
@@ -59,7 +59,7 @@ See [pc/README.md](pc/README.md).
 2. Let Gradle sync (SDK 34 / minSdk 26, Kotlin, Compose).
 3. Run on an emulator or device.
 4. In **Settings**, set peer host to `10.0.2.2` (emulator → host loopback),
-   your LAN IP, or a MagicDNS name like `bop-pc`, and port `8765`.
+   your LAN IP, or a MagicDNS name like `powerspec`, and port `8765`.
 
 Drop sample audio into the app’s `files/library/` via Device File Explorer, or
 use the in-app “Rescan library” after adding files under app storage.
