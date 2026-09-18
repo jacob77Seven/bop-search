@@ -5,6 +5,7 @@ import com.jacob77.bopsearch.data.PeerSettings
 import com.jacob77.bopsearch.data.QueueRepository
 import com.jacob77.bopsearch.data.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.min
 
 private const val TAG = "BopSync"
@@ -71,7 +73,7 @@ class SyncCoordinator(
         scope.launch { runOnce() }
     }
 
-    private suspend fun runOnce() {
+    private suspend fun runOnce() = withContext(Dispatchers.IO) {
         val settings = settingsRepository.settings.first()
         Log.d(TAG, "probe host=${settings.host} port=${settings.port}")
         val health = api.probeHealth(settings)
@@ -86,7 +88,7 @@ class SyncCoordinator(
                 backoffSeconds = backoffMs / 1000,
             )
             Log.i(TAG, "peer offline; next backoff=${backoffMs}ms err=${health.error}")
-            return
+            return@withContext
         }
 
         backoffMs = INITIAL_BACKOFF_MS

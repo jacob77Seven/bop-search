@@ -9,6 +9,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val TAG = "BopPc"
 
@@ -28,7 +30,7 @@ class PcApiClient(
         return "http://$host:${settings.port}"
     }
 
-    fun probeHealth(settings: PeerSettings): HealthResult {
+    suspend fun probeHealth(settings: PeerSettings): HealthResult = withContext(Dispatchers.IO) {
         val urls = listOf(
             "${baseUrl(settings)}/health",
             "${baseUrl(settings)}/v1/status",
@@ -41,7 +43,7 @@ class PcApiClient(
                     val body = response.body?.string().orEmpty()
                     if (response.isSuccessful) {
                         Log.i(TAG, "health ok url=$url body=$body")
-                        return HealthResult(online = true, body = body)
+                        return@withContext HealthResult(online = true, body = body)
                     }
                     lastError = "HTTP ${response.code} at $url"
                     Log.w(TAG, lastError!!)
@@ -51,10 +53,10 @@ class PcApiClient(
                 Log.d(TAG, "health miss url=$url err=$lastError")
             }
         }
-        return HealthResult(online = false, error = lastError)
+        return@withContext HealthResult(online = false, error = lastError)
     }
 
-    fun postJob(settings: PeerSettings, item: QueueItemEntity): JobPostResult {
+    suspend fun postJob(settings: PeerSettings, item: QueueItemEntity): JobPostResult = withContext(Dispatchers.IO) {
         val url = "${baseUrl(settings)}/v1/jobs"
         val metadata = JSONObject().apply {
             put("curationNotes", item.curationNotes)
@@ -70,14 +72,14 @@ class PcApiClient(
             put("kind", item.kind)
         }
         val body = payload.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
-        return try {
+        return@withContext try {
             val request = Request.Builder().url(url).post(body).build()
             http.newCall(request).execute().use { response ->
                 val text = response.body?.string().orEmpty()
                 if (!response.isSuccessful) {
                     val err = "HTTP ${response.code}: $text"
                     Log.w(TAG, "postJob failed id=${item.id} $err")
-                    return JobPostResult(ok = false, error = err)
+                    return@withContext JobPostResult(ok = false, error = err)
                 }
                 val jobId = runCatching { JSONObject(text).optString("id").ifEmpty { null } }
                     .getOrNull()
