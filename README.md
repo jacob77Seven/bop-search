@@ -1,0 +1,77 @@
+# Bop-Search
+
+Offline-first music player that uses **your own hardware** for generation and
+listening feedback for curation.
+
+- **Phone** works fully offline: local queue + local library playback.
+- When a **PC** comes online (typically over Tailscale Personal / MagicDNS),
+  the phone probes it and drains pending queue jobs over plain HTTP.
+- Generation (ComfyUI, etc.) is intentionally out of scope for this first slice.
+
+```
+┌─────────────────┐         HTTP (Tailscale / LAN)        ┌─────────────────┐
+│  Android phone  │  ── probe /health, POST /v1/jobs ──►  │  PC stub (this) │
+│  offline queue  │                                       │  FastAPI :8765  │
+│  local library  │                                       │  (ComfyUI later)│
+└─────────────────┘                                       └─────────────────┘
+```
+
+## Layout
+
+| Path | Role |
+|------|------|
+| `android/` | Kotlin + Jetpack Compose app (`com.jacob77.bopsearch`) |
+| `pc/` | Python FastAPI presence + job-accept stub |
+| `LICENSE` | MIT |
+| `.gitignore` | Android + Python defaults |
+
+## Architecture (this slice)
+
+1. **Durable local queue** (Room): generation prompts and curation edits
+   (`like` / `skip` / rating notes) with status `PENDING` | `SYNCED` | `FAILED`.
+2. **Local library playback**: scans app `files/library/` (and optional folder
+   URI later); list tracks; play/pause via `MediaPlayer`.
+3. **UI shells**: Library, Queue, Settings (peer host + port).
+4. **PC presence + sync drain**: on resume and periodically, `GET /health`
+   (or `/v1/status`). When online, `POST /v1/jobs` for each pending item and
+   mark synced. Exponential backoff while offline. Clear Logcat tags
+   `BopSync` / `BopPc`.
+
+WAN assumption: Tailscale Personal with MagicDNS names (e.g. `bop-pc`) or
+Tailscale IPs. **Tailscale is not required to scaffold or build** — configure
+any reachable host in Settings.
+
+## Run the PC stub
+
+```bash
+cd pc
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8765 --reload
+```
+
+See [pc/README.md](pc/README.md).
+
+## Open the Android app
+
+1. Open **Android Studio** → *Open* → select the `android/` directory
+   (or the repo root if you prefer; the Gradle project lives under `android/`).
+2. Let Gradle sync (SDK 34 / minSdk 26, Kotlin, Compose).
+3. Run on an emulator or device.
+4. In **Settings**, set peer host to `10.0.2.2` (emulator → host loopback),
+   your LAN IP, or a MagicDNS name like `bop-pc`, and port `8765`.
+
+Drop sample audio into the app’s `files/library/` via Device File Explorer, or
+use the in-app “Rescan library” after adding files under app storage.
+
+## Assumptions
+
+- Peer transport is plain HTTP (no TLS yet) on a private Tailscale/LAN network.
+- Job store on the PC is in-memory for this slice.
+- Android need not be compile-verified in CI here; structure matches current
+  Android Gradle Plugin + Compose BOM conventions.
+- No secrets in-repo; peer host/port live in DataStore preferences.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
