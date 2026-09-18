@@ -124,24 +124,72 @@ Evaluating a Mix → ordered or weighted candidate set → feed the play queue.
 
 ---
 
-## Cross-platform reuse (Donald to refine)
+## Shared core vs platforms
 
-**Share (must):** Mix evaluation, rating/curation rules, fingerprint identity, sync protocol, genre tree semantics, job queue semantics.
+**Share once (product brain):**
+- Domain: Track identity (fingerprint), Genre tree, Playlist, Mix rules, ratings, blacklist, curation events, generation jobs
+- Sync protocol: health, job drain, curation push, metadata/manifest pull, blob download policy
+- Pure logic: Mix evaluation → candidate set → queue fill; skip/full-listen rating deltas; undo-skip semantics; conflict rules (LWW + fingerprint beats path)
 
-**Don’t share naively:** UI widgets, Media3 vs desktop audio backends.
+**Must stay platform-native:**
+- Android: Media3 ExoPlayer + MediaSessionService, SAF folders, notifications, Compose Material nav chrome
+- Desktop: OS audio backend, filesystem watchers, windowing, tray
+- Generation host: Python FastAPI + later ComfyUI on the PC
 
-**Candidate approaches (rank after Donald’s memo):**
+**UI:** Share information architecture (tabs, now-playing states, Mix editor fields) and theme tokens. Do not share Media3 widgets. Musicolet-class density can match on both sides without one binary.
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| A. **Kotlin Multiplatform** shared module + Android app + Compose Desktop or thin PC UI | One language with existing Android | PC today is Python FastAPI |
-| B. **PC as source of truth API** + both UIs as clients | Fits current FastAPI; one evaluation engine on PC | Phone offline Mix play needs local copy of rules/engine |
-| C. **Shared JSON schemas + dual impl** of small pure functions (Kotlin + Python) | Fast to start | Drift risk — mitigate with golden tests |
-| D. **Rust/Go sync + rules daemon** both call | Strong single engine | Extra stack |
+## Reuse decision (locked)
 
-**Pragmatic default for P0:** C for Mix/curation pure functions + schemas in `docs/schema/`, with a plan to collapse to A or B once Mix rules stabilize. Phone must evaluate Mixes **offline**.
+Phased path **#1** (Donald memo, Steve locked 2026-09-18):
 
----
+1. **P0:** Schema-first in `docs/schema/` + golden fixtures under `docs/schema/fixtures/`. Phone keeps a Kotlin Mix evaluator for offline play; PC FastAPI remains source of truth for library/jobs when online. Small dual implementations of pure functions are OK if locked by golden tests.
+2. **P1:** Extract Mix/curation/fingerprint into a Kotlin Multiplatform `shared` module consumed by Android. Add **Compose Multiplatform Desktop** player that reuses shared domain (+ shared Compose UI where practical). FastAPI stays the generation + library/sync API over Tailscale.
+3. **Out of scope for now:** Flutter / Qt / WPF rewrite; Rust/Go rules daemon; evaluating Mixes only on the PC (breaks offline).
+
+## Schema & golden tests
+
+- Schemas: `docs/schema/*.schema.json` (Track, Mix, CurationEvent, Job, SyncEnvelope).
+- Fixtures: `docs/schema/fixtures/mix-*.json` — hand-written Mix evaluation cases (`tracks` + `mix` → `expected_order`).
+- Ownership: Donald maintains schema stubs; Chuck implements evaluators against fixtures; Steve gates merges when fixtures change.
+- Rating scale: **0–100**, mid **50**.
+
+## Offline Mix evaluation
+
+The phone **must** evaluate Mixes against the local Room track index while the PC is offline. The PC may re-evaluate later for server-side auto-queue / generation hints, but P0 playback of a Mix never depends on PC reachability. Treat Mix documents as synced data; treat the evaluator as a pure function covered by golden fixtures.
+
+## PC process topology
+
+```
+┌──────────────────────┐     HTTP / Tailscale      ┌─────────────────────────────┐
+│ Android (Compose)    │ ◄──────────────────────► │ pc/ FastAPI (jobs, library, │
+│ + local Mix eval     │                           │ sync, later ComfyUI)        │
+└──────────────────────┘                           └──────────────▲──────────────┘
+                                                                  │ localhost
+                                                       ┌──────────┴──────────┐
+                                                       │ Desktop UI (P1):    │
+                                                       │ Compose Desktop     │
+                                                       │ client of FastAPI   │
+                                                       └─────────────────────┘
+```
+
+FastAPI is a **sidecar / server**, not the desktop UI framework. Compose Desktop is the PC player shell.
+
+## Module map (target)
+
+| Path | Role |
+|------|------|
+| `docs/schema/` | Shared contracts + Mix golden fixtures |
+| `android/` | Android app (today’s entry point; later depends on `shared/`) |
+| `shared/` | (P1) KMP domain: models, Mix eval, curation reducer, sync DTOs |
+| `desktop/` | (P1) Compose Multiplatform Desktop player |
+| `pc/` | Python FastAPI generation + library/sync API |
+
+Migration: keep shipping in `android/` + `pc/` for P0; introduce `shared/` when Mix rules stabilize; add `desktop/` without rewriting FastAPI.
+
+## Cross-platform reuse (historical)
+
+Earlier candidates (A KMP, B PC-only engine, C schemas+dual impl, D Rust/Go daemon) are superseded by **Reuse decision (locked)** above. P0 remains schema + golden tests (former option C).
+
 
 ## Sync protocol (sketch)
 
@@ -166,16 +214,16 @@ Evaluating a Mix → ordered or weighted candidate set → feed the play queue.
 
 **Now playing P0:** mini player; tap fullscreen; media notification still works; no crash on Home.  
 
-**Reuse P0:** `docs/schema/` published; Donald memo linked from this file.
+**Reuse P0:** `docs/schema/` + fixtures on `main`; DESIGN reuse sections locked.
 
 ---
 
 ## Open questions (Steve will decide defaults if blocked)
 
-1. Desktop UI toolkit (Compose Desktop vs keep Python + webview vs Qt) — default pending Donald.  
+1. Desktop UI toolkit — **default locked: Compose Desktop + FastAPI sidecar** (Python stays generation/sync API, not the UI kit).  
 2. Rating scale 1–5 vs 0–100 — **default 0–100**, mid 50.  
 3. Multiple concurrent queues (Musicolet-style) — **P1**; P0 single queue + Mixes regenerating into it.
 
 ---
 
-*Last updated: 2026-09-18 — Steve*
+*Last updated: 2026-09-18 — Steve; reuse/schema sections — Donald*
