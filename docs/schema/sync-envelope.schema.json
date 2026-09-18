@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bop-search.local/schema/sync-envelope.schema.json",
+  "title": "SyncEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol_version", "client_id", "direction", "sent_at"],
+  "properties": {
+    "protocol_version": { "type": "integer", "minimum": 1, "default": 1 },
+    "client_id": { "type": "string" },
+    "direction": { "type": "string", "enum": ["push", "pull", "ack"] },
+    "sent_at": { "type": "string", "format": "date-time" },
+    "jobs": {
+      "type": "array",
+      "items": { "$ref": "job.schema.json" }
+    },
+    "curation_events": {
+      "type": "array",
+      "items": { "$ref": "curation-event.schema.json" }
+    },
+    "tracks": {
+      "type": "array",
+      "items": { "$ref": "track.schema.json" }
+    },
+    "mixes": {
+      "type": "array",
+      "items": { "$ref": "mix.schema.json" }
+    },
+    "blob_manifest": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["track_id", "size_bytes"],
+        "properties": {
+          "track_id": { "type": "string" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string" },
+          "download_path": { "type": "string" }
+        }
+      }
+    }
+  }
+}
