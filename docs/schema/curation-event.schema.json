@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bop-search.local/schema/curation-event.schema.json",
+  "title": "CurationEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "track_id", "type", "ts", "client_id"],
+  "properties": {
+    "id": { "type": "string" },
+    "track_id": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["full_listen", "skip", "undo_skip", "rate", "blacklist"]
+    },
+    "delta": {
+      "type": ["number", "null"],
+      "description": "Rating delta or absolute for type=rate."
+    },
+    "absolute_rating": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+    "ts": { "type": "string", "format": "date-time" },
+    "client_id": { "type": "string" }
+  }
+}
