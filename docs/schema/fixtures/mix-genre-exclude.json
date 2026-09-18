@@ -1,0 +1,19 @@
+{
+  "name": "genre_exclude_and_blacklist",
+  "mix": {
+    "id": "mix-genre",
+    "name": "No metal",
+    "rules": {
+      "genre": { "exclude": ["metal"] },
+      "like_bias": 0.5,
+      "new_bias": 0
+    }
+  },
+  "tracks": [
+    { "id": "metal1", "rating": 99, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": ["metal"] },
+    { "id": "jazz1", "rating": 70, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": ["jazz"] },
+    { "id": "pop1", "rating": 60, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": true, "genre_ids": ["pop"] },
+    { "id": "jazz2", "rating": 40, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": ["jazz"] }
+  ],
+  "expected_order": ["jazz1", "jazz2"]
+}
