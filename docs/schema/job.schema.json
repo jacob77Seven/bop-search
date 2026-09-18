@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bop-search.local/schema/job.schema.json",
+  "title": "GenerationJob",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["local_id", "client_id", "prompt", "status", "created_at"],
+  "properties": {
+    "id": {
+      "type": ["string", "null"],
+      "description": "PC-assigned id after accept."
+    },
+    "local_id": {
+      "type": "string",
+      "description": "Client idempotency key for drain."
+    },
+    "client_id": { "type": "string" },
+    "prompt": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "accepted", "running", "ready", "failed"]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": ["string", "null"], "format": "date-time" },
+    "error": { "type": ["string", "null"] },
+    "output_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "PC filesystem paths when ready."
+    }
+  }
+}
