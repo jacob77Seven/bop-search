@@ -29,6 +29,7 @@ fun SettingsScreen(
     syncState: SyncUiState,
     onSave: (host: String, port: Int) -> Unit,
     onKickSync: () -> Unit,
+    onOpenNotificationSettings: () -> Unit = {},
 ) {
     var host by remember(settings.host) { mutableStateOf(settings.host) }
     var portText by remember(settings.port) { mutableStateOf(settings.port.toString()) }
@@ -69,9 +70,24 @@ fun SettingsScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Save") }
-            Button(onClick = onKickSync, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = onKickSync,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Text("Probe / sync now")
             }
+            Button(
+                onClick = onOpenNotificationSettings,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Notification settings")
+            }
+            Text(
+                "Android 13+: media controls need Notifications allowed. " +
+                    "If the shade stays empty while audio plays, tap above " +
+                    "(or App info → Notifications → allow Bop-Search / Now playing).",
+                style = MaterialTheme.typography.bodySmall,
+            )
             Text(
                 "Presence: ${syncState.presence}\n" +
                     "Backoff: ${syncState.backoffSeconds}s\n" +

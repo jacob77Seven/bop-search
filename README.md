@@ -94,4 +94,13 @@ Logcat filters: `BopSync`, `BopPc`.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).\n
+## Verify system media controls (Media3)
+
+1. Install/rebuild, **Allow notifications** when prompted (Android 13+).
+2. Library → play a track (in-app now-playing should work).
+3. Pull down the shade / check lock screen: **Bop-Search / Now playing** media notification with title + play/pause.
+4. Leave the app — audio continues; notification still controls it.
+5. Optional: BT/headset buttons; unplug headphones should pause.
+
+If the shade is empty but audio plays: open App info → Notifications and enable the **Now playing** channel.

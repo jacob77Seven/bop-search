@@ -2,6 +2,7 @@ package com.jacob77.bopsearch.player
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -30,7 +31,7 @@ data class PlaybackState(
 /**
  * App-facing playback facade. Talks to [PlaybackService] via [MediaController]
  * so Library UI keeps the same [PlaybackState] / play / toggle API while ExoPlayer
- * and MediaSession run in a foreground service.
+ * and MediaSession run in a foreground media-playback service.
  */
 class LocalPlayer(context: Context) {
     private val appContext = context.applicationContext
@@ -73,6 +74,7 @@ class LocalPlayer(context: Context) {
         if (released) return
         currentTrack = track
         _state.value = PlaybackState(track = track, isPlaying = false, error = null)
+        ensureServiceStarted()
         val c = controller
         if (c == null) {
             pendingTrack = track
@@ -90,10 +92,10 @@ class LocalPlayer(context: Context) {
             c.pause()
             Log.i(TAG, "paused ${track.title}")
         } else {
+            ensureServiceStarted()
             c.play()
             Log.i(TAG, "resumed ${track.title}")
         }
-        // Listener will refresh state; optimistic update keeps UI snappy.
         publishState(error = null)
     }
 
@@ -118,8 +120,22 @@ class LocalPlayer(context: Context) {
         _state.value = PlaybackState()
     }
 
+    private fun ensureServiceStarted() {
+        // Do NOT use startForegroundService here — MediaSessionService must call
+        // startForeground itself when the media notification is posted on play.
+        // A premature FGS start crashes with "did not then call startForeground".
+        val intent = Intent(appContext, PlaybackService::class.java)
+        try {
+            appContext.startService(intent)
+            Log.i(TAG, "startService(PlaybackService)")
+        } catch (e: Exception) {
+            Log.w(TAG, "startService failed (controller connect will retry): ${e.message}")
+        }
+    }
+
     private fun connect() {
         if (released || controller != null || controllerFuture != null) return
+        ensureServiceStarted()
         val token = SessionToken(
             appContext,
             ComponentName(appContext, PlaybackService::class.java),
@@ -170,7 +186,9 @@ class LocalPlayer(context: Context) {
                     MediaMetadata.Builder()
                         .setTitle(track.title)
                         .setDisplayTitle(track.title)
-                        .setArtist(track.sourceLabel)
+                        .setArtist(track.sourceLabel.ifBlank { "Bop-Search" })
+                        .setAlbumTitle(track.sourceLabel.ifBlank { "Library" })
+                        .setIsPlayable(true)
                         .build(),
                 )
                 .build()
@@ -188,7 +206,6 @@ class LocalPlayer(context: Context) {
     }
 
     private fun publishState(error: String?) {
-        // Always hop to main in case a listener fires off-thread.
         if (Looper.myLooper() != Looper.getMainLooper()) {
             mainHandler.post { publishState(error) }
             return

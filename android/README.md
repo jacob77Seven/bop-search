@@ -35,32 +35,42 @@ trees may take a few seconds to scan.
 ## Playback (Media3)
 
 Library taps start playback through `LocalPlayer` → `MediaController` →
-`PlaybackService` (ExoPlayer + MediaSession). The session publishes metadata
-(title) and system media controls.
+`PlaybackService` (ExoPlayer + MediaSession). The session uses
+`DefaultMediaNotificationProvider` (channel **Now playing** / `bop_search_media`).
 
-### Verify notification / lock screen / headset
+On **Android 13+ (API 33+)**, the app requests **POST_NOTIFICATIONS** at launch and
+again before the first play. If you deny and the system greys out Notifications,
+use **Settings → Notification settings** in-app, or:
 
-1. Sync Gradle, install a debug build, grant **Notifications** if prompted (API 33+).
-2. Add a music folder or push a file into `files/library/`, **Rescan**, tap a track.
-3. Confirm Library now-playing card shows title and play/pause still works.
-4. Pull down the shade (or lock the device): media notification / lock-screen
-   controls should show the track title with play/pause.
-5. Leave the app (Home or another app): audio should continue; notification
-   controls still pause/resume.
-6. Optional: Bluetooth headset or wired headset play/pause / pause-on-unplug
-   (audio becoming noisy).
+- **App info → Notifications → Allow** (enable the **Now playing** channel)
+- OEM paths: Samsung *Notifications*, Pixel *App notifications*, Xiaomi *App permissions → Notifications*
 
-Logcat filter: `BopPlayer` (also `BopSync`, `BopPc`, `BopLibrary`).
+### Verify system media controls
+
+1. Install/rebuild. When prompted, tap **Allow** for notifications.
+2. Library → play a track (in-app now-playing should work).
+3. Pull down the shade / lock screen: **Now playing** with title + play/pause.
+4. Leave the app — audio continues; notification still controls it.
+5. Optional: BT/headset buttons; unplug headphones should pause.
+
+If audio plays but the shade is empty / Notifications is greyed: open in-app
+**Notification settings** (or App info → Notifications) and allow Bop-Search.
 
 ### Limitations
 
 - Single-track playback (no queue / next-previous playlist yet).
-- No playback resumption after process death (no MediaButtonReceiver /
-  `onPlaybackResumption` yet).
 - Artwork is not set; notification uses the default media style without album art.
-- On API 33+, denying notification permission may hide the media notification
-  while in-app and headset controls can still work.
 
 ## Logging
 
 Logcat filters: `BopSync`, `BopPc`, `BopLibrary`, `BopPlayer`.
+
+## Verify system media controls (Media3)
+
+1. Install/rebuild, **Allow notifications** when prompted (Android 13+).
+2. Library → play a track (in-app now-playing should work).
+3. Pull down the shade / check lock screen: **Bop-Search / Now playing** media notification with title + play/pause.
+4. Leave the app — audio continues; notification still controls it.
+5. Optional: BT/headset buttons; unplug headphones should pause.
+
+If the shade is empty but audio plays: open App info → Notifications and enable the **Now playing** channel.
