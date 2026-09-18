@@ -12,21 +12,34 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -37,8 +50,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jacob77.bopsearch.player.Track
+import com.jacob77.bopsearch.ui.generate.GenerateScreen
 import com.jacob77.bopsearch.ui.library.LibraryScreen
-import com.jacob77.bopsearch.ui.queue.QueueScreen
+import com.jacob77.bopsearch.ui.mixes.MixesScreen
+import com.jacob77.bopsearch.ui.nowplaying.NowPlayingScreen
+import com.jacob77.bopsearch.ui.player.MiniPlayerBar
+import com.jacob77.bopsearch.ui.playlists.PlaylistsScreen
+import com.jacob77.bopsearch.ui.queues.PlayQueuesScreen
 import com.jacob77.bopsearch.ui.settings.SettingsScreen
 import com.jacob77.bopsearch.ui.theme.BopSearchTheme
 
@@ -127,7 +145,6 @@ class MainActivity : ComponentActivity() {
     private fun openAppNotificationSettings() {
         val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
             putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-            // Pre-O fallback used by some OEMs:
             putExtra("app_package", packageName)
             putExtra("app_uid", applicationInfo.uid)
             data = Uri.parse("package:$packageName")
@@ -149,7 +166,11 @@ private data class Dest(val route: String, val label: String, val icon: ImageVec
 
 private val destinations = listOf(
     Dest("library", "Library", Icons.Default.LibraryMusic),
-    Dest("queue", "Queue", Icons.Default.QueueMusic),
+    Dest("queues", "Queues", Icons.Default.QueueMusic),
+    Dest("playlists", "Playlists", Icons.Default.PlaylistPlay),
+    Dest("mixes", "Mixes", Icons.Default.Shuffle),
+    Dest("now", "Now playing", Icons.Default.GraphicEq),
+    Dest("generate", "Generate", Icons.Default.AutoAwesome),
     Dest("settings", "Settings", Icons.Default.Settings),
 )
 
@@ -166,27 +187,42 @@ private fun BopSearchNav(
     val tracks by viewModel.tracks.collectAsStateWithLifecycle()
     val playback by viewModel.playback.collectAsStateWithLifecycle()
     val musicFolders by viewModel.musicFolders.collectAsStateWithLifecycle()
-    val queue by viewModel.queueItems.collectAsStateWithLifecycle()
+    val generateQueue by viewModel.queueItems.collectAsStateWithLifecycle()
+    val playQueue by viewModel.playQueue.collectAsStateWithLifecycle()
+    val mixes by viewModel.mixes.collectAsStateWithLifecycle()
+    val mixMessage by viewModel.mixMessage.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val sync by viewModel.syncState.collectAsStateWithLifecycle()
 
+    val showMini = playback.track != null && current != "now"
+
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                destinations.forEach { dest ->
-                    NavigationBarItem(
-                        selected = current == dest.route,
-                        onClick = {
-                            nav.navigate(dest.route) {
+            Column {
+                if (showMini) {
+                    MiniPlayerBar(
+                        playback = playback,
+                        onExpand = {
+                            nav.navigate("now") {
                                 popUpTo(nav.graph.startDestinationId) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(dest.icon, contentDescription = dest.label) },
-                        label = { Text(dest.label) },
+                        onToggle = viewModel::togglePlayPause,
+                        onSkipNext = viewModel::skipNext,
                     )
                 }
+                ScrollableBottomNav(
+                    currentRoute = current,
+                    onNavigate = { route ->
+                        nav.navigate(route) {
+                            popUpTo(nav.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                )
             }
         },
     ) { padding ->
@@ -208,9 +244,42 @@ private fun BopSearchNav(
                     onToggle = viewModel::togglePlayPause,
                 )
             }
-            composable("queue") {
-                QueueScreen(
-                    items = queue,
+            composable("queues") {
+                PlayQueuesScreen(
+                    queue = playQueue,
+                    playback = playback,
+                    onPlayFrom = { index ->
+                        val q = playQueue
+                        if (q.isNotEmpty()) viewModel.playTracks(q, index)
+                    },
+                    onClear = viewModel::clearPlayQueue,
+                )
+            }
+            composable("playlists") {
+                PlaylistsScreen()
+            }
+            composable("mixes") {
+                MixesScreen(
+                    mixes = mixes,
+                    message = mixMessage,
+                    onClearMessage = viewModel::clearMixMessage,
+                    onSave = viewModel::saveMix,
+                    onDelete = viewModel::deleteMix,
+                    onPlay = viewModel::playMix,
+                )
+            }
+            composable("now") {
+                NowPlayingScreen(
+                    playback = playback,
+                    onToggle = viewModel::togglePlayPause,
+                    onSeek = viewModel::seekTo,
+                    onSkipNext = viewModel::skipNext,
+                    onSkipPrevious = viewModel::skipPrevious,
+                )
+            }
+            composable("generate") {
+                GenerateScreen(
+                    items = generateQueue,
                     syncState = sync,
                     onAddPrompt = viewModel::addPrompt,
                     onCuration = viewModel::updateCuration,
@@ -226,6 +295,39 @@ private fun BopSearchNav(
                     onSave = viewModel::saveSettings,
                     onKickSync = viewModel::kickSync,
                     onOpenNotificationSettings = onOpenNotificationSettings,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScrollableBottomNav(
+    currentRoute: String?,
+    onNavigate: (String) -> Unit,
+) {
+    val scroll = rememberScrollState()
+    Surface(tonalElevation = 3.dp, color = MaterialTheme.colorScheme.surfaceContainer) {
+        // Musicolet-style dense row: scroll horizontally when 7 tabs don't fit.
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scroll)
+                .padding(horizontal = 4.dp),
+        ) {
+            destinations.forEach { dest ->
+                NavigationBarItem(
+                    selected = currentRoute == dest.route,
+                    onClick = { onNavigate(dest.route) },
+                    icon = { Icon(dest.icon, contentDescription = dest.label) },
+                    label = {
+                        Text(
+                            dest.label,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    modifier = Modifier.widthIn(min = 72.dp),
                 )
             }
         }

@@ -18,11 +18,17 @@ private val LightColors = lightColorScheme(
 private val DarkColors = darkColorScheme(
     primary = GreenSecondary,
     secondary = GreenPrimary,
+    surface = Color(0xFF121212),
+    background = Color(0xFF0B0B0B),
 )
 
 @Composable
-fun BopSearchTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+fun BopSearchTheme(
+    /** Default dark-friendly; follow system when false. */
+    forceDark: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val dark = forceDark || isSystemInDarkTheme()
     MaterialTheme(
         colorScheme = if (dark) DarkColors else LightColors,
         content = content,

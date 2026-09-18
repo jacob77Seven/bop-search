@@ -1,0 +1,19 @@
+{
+  "name": "energy_window_then_like_bias",
+  "mix": {
+    "id": "mix-energy",
+    "name": "Chill-mid energy",
+    "rules": {
+      "energy": { "min": 0.2, "max": 0.6 },
+      "like_bias": 1,
+      "new_bias": 0
+    }
+  },
+  "tracks": [
+    { "id": "hype", "rating": 90, "energy": 0.95, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] },
+    { "id": "calm-high", "rating": 80, "energy": 0.3, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] },
+    { "id": "calm-low", "rating": 55, "energy": 0.4, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] },
+    { "id": "sleep", "rating": 70, "energy": 0.05, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] }
+  ],
+  "expected_order": ["calm-high", "calm-low"]
+}

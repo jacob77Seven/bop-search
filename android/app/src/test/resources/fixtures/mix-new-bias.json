@@ -1,0 +1,17 @@
+{
+  "name": "new_bias_prefers_unplayed",
+  "mix": {
+    "id": "mix-new",
+    "name": "Fresh first",
+    "rules": {
+      "like_bias": 0,
+      "new_bias": 1
+    }
+  },
+  "tracks": [
+    { "id": "old", "rating": 50, "play_count": 10, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] },
+    { "id": "some", "rating": 50, "play_count": 3, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] },
+    { "id": "fresh", "rating": 50, "play_count": 0, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] }
+  ],
+  "expected_order": ["fresh", "some", "old"]
+}

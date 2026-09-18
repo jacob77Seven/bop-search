@@ -1,0 +1,17 @@
+{
+  "name": "like_bias_prefers_high_rating",
+  "mix": {
+    "id": "mix-like",
+    "name": "Favorites first",
+    "rules": {
+      "like_bias": 1,
+      "new_bias": 0
+    }
+  },
+  "tracks": [
+    { "id": "low", "rating": 20, "play_count": 5, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] },
+    { "id": "mid", "rating": 55, "play_count": 5, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] },
+    { "id": "high", "rating": 95, "play_count": 5, "date_added": "2026-01-01T00:00:00Z", "blacklist": false, "genre_ids": [] }
+  ],
+  "expected_order": ["high", "mid", "low"]
+}

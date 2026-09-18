@@ -1,4 +1,4 @@
-package com.jacob77.bopsearch.ui.queue
+package com.jacob77.bopsearch.ui.generate
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,7 +40,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QueueScreen(
+fun GenerateScreen(
     items: List<QueueItemEntity>,
     syncState: SyncUiState,
     onAddPrompt: (String) -> Unit,
@@ -57,7 +57,7 @@ fun QueueScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Queue") },
+                title = { Text("Generate") },
                 actions = {
                     TextButton(onClick = onKickSync) { Text("Sync now") }
                 },
