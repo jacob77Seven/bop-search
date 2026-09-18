@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bop-search.local/schema/mix.schema.json",
+  "title": "Mix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "rules"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "icon": { "type": ["string", "null"] },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["like_bias", "new_bias"],
+      "properties": {
+        "genre": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allow": { "type": "array", "items": { "type": "string" } },
+            "require": { "type": "array", "items": { "type": "string" } },
+            "exclude": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "tone": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number", "minimum": 0, "maximum": 1 },
+            "max": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "energy": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number", "minimum": 0, "maximum": 1 },
+            "max": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "rating_min": { "type": "number", "minimum": 0, "maximum": 100 },
+        "rating_max": { "type": "number", "minimum": 0, "maximum": 100 },
+        "like_bias": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "0 = ignore rating; 1 = strongly prefer high-rated."
+        },
+        "new_bias": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "0 = ignore newness; 1 = strongly prefer low play_count / recent."
+        },
+        "seed": { "type": ["integer", "null"] }
+      }
+    }
+  }
+}
