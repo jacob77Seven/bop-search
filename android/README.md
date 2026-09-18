@@ -13,6 +13,14 @@ Playback: Jetpack Media3 ExoPlayer + `MediaSessionService` (notification / lock 
 If the Gradle wrapper JAR is missing, Android Studio will offer to generate it,
 or use *File → New → Import Project*.
 
+## Gradle sync / build (Media3 + compileSdk 34)
+
+- `compileSdk` / `targetSdk` **34**, AGP **8.7.2**
+- Media3 pinned to **1.5.1** (ExoPlayer + MediaSession). Newer Media3 lines need higher compileSdk (1.6+ → 35, 1.11 → 36).
+- Open the `android/` folder in Android Studio → Trust → let Gradle sync.
+- If sync still fails on AAR metadata, Invalidate Caches / confirm SDK 34 is installed (SDK Manager).
+- Keep notifications: on API 33+ grant **POST_NOTIFICATIONS** so system media controls show (`f70588e` and later).
+
 ## Configure peer
 
 **Settings** tab: host `powerspec` (MagicDNS) or LAN/Tailscale IP, port `8765`.  

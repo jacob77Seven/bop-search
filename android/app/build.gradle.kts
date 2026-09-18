@@ -75,8 +75,9 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
-    // Jetpack Media3 (ExoPlayer + MediaSession). Versions are aligned 1.x (Media3 lineage).
-    val media3 = "1.11.0"
+    // Jetpack Media3 (ExoPlayer + MediaSession). Pin for compileSdk 34:
+    // 1.6+ requires compileSdk 35; 1.11 requires 36 (beyond AGP 8.7.2's comfortable max of 35).
+    val media3 = "1.5.1"
     implementation("androidx.media3:media3-exoplayer:$media3")
     implementation("androidx.media3:media3-session:$media3")
     implementation("androidx.media3:media3-common:$media3")
